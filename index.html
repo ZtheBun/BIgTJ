@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>A very important question</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: #202020;
+      background: #fff;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 280px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+    }
+
+    main {
+      display: grid;
+      min-height: 100vh;
+      min-height: 100dvh;
+      place-content: center;
+      justify-items: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .question {
+      max-width: 620px;
+      margin: 0 0 26px;
+      font-size: clamp(1.25rem, 4vw, 2rem);
+      line-height: 1.35;
+    }
+
+    .answers {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    button {
+      min-width: 88px;
+      min-height: 46px;
+      border: 2px solid #202020;
+      border-radius: 6px;
+      padding: 9px 20px;
+      background: #fff;
+      color: #202020;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover { background: #f1f1f1; }
+    button:focus-visible { outline: 3px solid #e34d73; outline-offset: 4px; }
+
+    #no-button { z-index: 2; }
+
+    #copy-button {
+      border-color: #176b55;
+      background: #176b55;
+      color: #fff;
+    }
+
+    #copy-button:hover { background: #105641; }
+
+    .final-message {
+      margin: 0;
+      color: #e32636;
+      font-size: clamp(3rem, 12vw, 8rem);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    #confetti {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <main id="screen" aria-live="polite">
+    <section aria-label="A question">
+      <p class="question">Yo wasp Big TJ, i spent an hour on this. want to play my level?</p>
+      <div class="answers">
+        <button id="yes-button" type="button">yes</button>
+        <button id="no-button" type="button">no</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const screen = document.querySelector("#screen");
+    let confettiFrame;
+
+    function showCopyScreen() {
+      screen.innerHTML = '<button id="copy-button" type="button">Copy ID</button><canvas id="confetti" aria-hidden="true"></canvas>';
+      document.querySelector("#copy-button").addEventListener("click", copyIdAndContinue);
+      startConfetti();
+    }
+
+    function showFinalScreen() {
+      cancelAnimationFrame(confettiFrame);
+      screen.innerHTML = '<p class="final-message">IDFK</p>';
+    }
+
+    function moveNoButton() {
+      const button = document.querySelector("#no-button");
+      if (!button) return;
+
+      const margin = 12;
+      const maxX = Math.max(margin, window.innerWidth - button.offsetWidth - margin);
+      const maxY = Math.max(margin, window.innerHeight - button.offsetHeight - margin);
+      button.style.position = "fixed";
+      button.style.left = `${margin + Math.random() * (maxX - margin)}px`;
+      button.style.top = `${margin + Math.random() * (maxY - margin)}px`;
+    }
+
+    async function copyIdAndContinue() {
+      try {
+        await navigator.clipboard.writeText("149456454");
+      } catch {
+        const field = document.createElement("textarea");
+        field.value = "149456454";
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        document.body.appendChild(field);
+        field.select();
+        document.execCommand("copy");
+        field.remove();
+      }
+      showFinalScreen();
+    }
+
+    function startConfetti() {
+      const canvas = document.querySelector("#confetti");
+      const context = canvas.getContext("2d");
+      const colors = ["#e34d73", "#f2b134", "#2a9d8f", "#4677d5", "#9b59b6"];
+      const pieces = Array.from({ length: 120 }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight - window.innerHeight,
+        size: 4 + Math.random() * 7,
+        speed: 2 + Math.random() * 4,
+        drift: (Math.random() - 0.5) * 2,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        angle: Math.random() * Math.PI * 2
+      }));
+
+      function resize() {
+        const scale = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * scale;
+        canvas.height = window.innerHeight * scale;
+        context.setTransform(scale, 0, 0, scale, 0, 0);
+      }
+
+      function draw() {
+        context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        for (const piece of pieces) {
+          piece.y += piece.speed;
+          piece.x += piece.drift;
+          piece.angle += 0.04;
+          if (piece.y > window.innerHeight + piece.size) {
+            piece.y = -piece.size;
+            piece.x = Math.random() * window.innerWidth;
+          }
+          context.save();
+          context.translate(piece.x, piece.y);
+          context.rotate(piece.angle);
+          context.fillStyle = piece.color;
+          context.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size * 0.65);
+          context.restore();
+        }
+        confettiFrame = requestAnimationFrame(draw);
+      }
+
+      resize();
+      window.addEventListener("resize", resize, { once: true });
+      draw();
+    }
+
+    document.querySelector("#yes-button").addEventListener("click", showCopyScreen);
+    const noButton = document.querySelector("#no-button");
+    noButton.addEventListener("pointerenter", moveNoButton);
+    noButton.addEventListener("focus", moveNoButton);
+    noButton.addEventListener("click", moveNoButton);
+  </script>
+</body>
+</html>
